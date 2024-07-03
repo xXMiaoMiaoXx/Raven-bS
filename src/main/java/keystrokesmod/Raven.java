@@ -26,9 +26,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import org.jetbrains.annotations.NotNull;
 
 @Mod(
-        modid = "keystrokes",
+        /*modid = "keystrokes",
         name = "KeystrokesMod",
-        version = "KMV5",
+        version = "KMV5",*/
+		modid = "BetterFps",
+        name = "BetterFps",
+        version = "1.2.0",
         acceptedMinecraftVersions = "[1.8.9]"
 )
 public class Raven {
