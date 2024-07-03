@@ -40,17 +40,19 @@ public class AutoClicker extends Module {
 	public static ButtonSetting leftClick;
 	private int action;
 	private Random rand = null;
+	private long lastClickTime, curTime;
 	private static int useShotgunIntention = 0;
 
     public AutoClicker() {
         super("AutoClicker", Module.category.combat, 0);
-        this.registerSetting(shotInterval = new SliderSetting("Shot interval", 10, 1, 20, 1));
+        this.registerSetting(shotInterval = new SliderSetting("Shot interval", 20, 10, 50, 1));
 		this.registerSetting(weaponCount = new SliderSetting("Weapon count", 1, 1, 3, 1));
 		this.registerSetting(smartUseShotgun = new ButtonSetting("Smart use shotgun", false));
     }
 
     public void onEnable() {
 		action = 0;
+		lastClickTime = System.currentTimeMillis()-50;
         this.rand = new Random();
     }
 
@@ -63,13 +65,18 @@ public class AutoClicker extends Module {
 	
 	private void incAction(){
 		action++;
-		action %= 6;
+		action %= ((int)weaponCount.getInput())*2;
 	}
 
     @SubscribeEvent
     public void onRenderTick(@NotNull RenderTickEvent ev) {
         if (ev.phase != Phase.END && Utils.nullCheck() && !mc.thePlayer.isEating() && mc.objectMouseOver != null) {
             if (mc.currentScreen == null && mc.inGameHasFocus) {
+				curTime = System.currentTimeMillis();
+				if(curTime-lastClickTime >= 50){
+					lastClickTime = curTime;
+				}else return;
+				
 				if(mc.thePlayer.hurtTime != 0) useShotgunIntention = 10;
 				
 				if(rescuing){
@@ -92,14 +99,15 @@ public class AutoClicker extends Module {
 				switch (action) {
 					case 0: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
 							mc.thePlayer.inventory.currentItem = 1;
 							incAction();
 						}
 					break;
 					case 1: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 						}
 					break;
@@ -107,32 +115,30 @@ public class AutoClicker extends Module {
 					
 					case 2: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if((int)weaponCount.getInput() >= 2){
-								if(smartUseShotgun.isToggled()){
-									if(useShotgunIntention > 0){
-										useShotgunIntention--;
-										KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-										mc.thePlayer.inventory.currentItem = 2;
-									}
-								}else{
-									KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+							if(smartUseShotgun.isToggled()){
+								if(useShotgunIntention > 0){
+									useShotgunIntention--;
+									//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
 									mc.thePlayer.inventory.currentItem = 2;
 								}
+							}else{
+								//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+								mc.thePlayer.inventory.currentItem = 2;
 							}
 							incAction();
 						}
 					break;
 					case 3: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if((int)weaponCount.getInput() >= 2){
-								if(smartUseShotgun.isToggled()){
-									if(useShotgunIntention > 0){
-										useShotgunIntention--;
-										KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-									}
-								}else{
-									KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+							if(smartUseShotgun.isToggled()){
+								if(useShotgunIntention > 0){
+									useShotgunIntention--;
+									//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+									KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 								}
+							}else{
+								//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+								KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							}
 							incAction();
 						}
@@ -140,18 +146,15 @@ public class AutoClicker extends Module {
 					
 					case 4: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if((int)weaponCount.getInput() >= 3){
-								KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-								mc.thePlayer.inventory.currentItem = 3;
-							}
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+							mc.thePlayer.inventory.currentItem = 3;
 							incAction();
 						}
 					break;
 					case 5: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if((int)weaponCount.getInput() >= 3){
-								KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-							}
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 						}
 					break;
