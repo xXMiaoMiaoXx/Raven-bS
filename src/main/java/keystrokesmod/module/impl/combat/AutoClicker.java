@@ -77,7 +77,7 @@ public class AutoClicker extends Module {
 					lastClickTime = curTime;
 				}else return;
 				
-				if(mc.thePlayer.hurtTime != 0) useShotgunIntention = 10;
+				if(mc.thePlayer.hurtTime != 0) useShotgunIntention = 5;
 				
 				if(rescuing){
 					if(blocking) return;
@@ -109,37 +109,27 @@ public class AutoClicker extends Module {
 							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
 							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
+							if(smartUseShotgun.isToggled()){
+								if(useShotgunIntention <= 0){
+									incAction();
+									incAction();
+								}else useShotgunIntention--;
+							}
 						}
 					break;
 
 					
 					case 2: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if(smartUseShotgun.isToggled()){
-								if(useShotgunIntention > 0){
-									useShotgunIntention--;
-									//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-									mc.thePlayer.inventory.currentItem = 2;
-								}
-							}else{
-								//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-								mc.thePlayer.inventory.currentItem = 2;
-							}
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+							mc.thePlayer.inventory.currentItem = 2;
 							incAction();
 						}
 					break;
 					case 3: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
-							if(smartUseShotgun.isToggled()){
-								if(useShotgunIntention > 0){
-									useShotgunIntention--;
-									//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-									KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
-								}
-							}else{
-								//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-								KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
-							}
+							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
+							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 						}
 					break;
