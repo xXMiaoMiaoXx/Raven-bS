@@ -75,6 +75,7 @@ public class AutoHeal extends Module {
 						setFoundRescueTarget(true);
                     }
                 });
+		if(mc.thePlayer.isInvisible()) setFoundRescueTarget(false);
 		if(foundRescueTarget){
 			AutoClicker.rescuing = true;
 			if(!isRescuing && mc.thePlayer.getHealth()>=maxHealth.getInput()){
