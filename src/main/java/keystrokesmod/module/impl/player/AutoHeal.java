@@ -49,11 +49,13 @@ public class AutoHeal extends Module {
 	
 	public void onEnable() {
 		isRescuing = false;
+		AutoClicker.rescuing = false;
     }
 
     public void onDisable() {
 		//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING));
 		isRescuing = false;
+		AutoClicker.rescuing = false;
 		//mc.thePlayer.sendChatMessage("Stop Snaking.");
     }
 	
@@ -87,9 +89,9 @@ public class AutoHeal extends Module {
 				//mc.thePlayer.sendChatMessage("Start Snaking.");
 			}
 		}else{
+			AutoClicker.rescuing = false;
 			if(isRescuing){
 				//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING));
-				AutoClicker.rescuing = false;
 				isRescuing = false;
 				KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
 				KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
