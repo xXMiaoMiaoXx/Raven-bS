@@ -35,28 +35,36 @@ import static net.minecraft.util.EnumFacing.DOWN;
 public class AutoHeal extends Module {
     private final SliderSetting maxHealth;
 	private final SliderSetting rescueRange;
+	private final ButtonSetting dualRescueMode;
 	public static boolean isRescuing;
 	public static boolean isKey1Pressed;
 	public static boolean isBlocking;
+	public static byte latestState;
+	private long lastReviveTime;
 	private static boolean foundRescueTarget;
+	private static boolean prevFoundRescueTarget;
+	private static boolean rescuedTarget;
 	
     public AutoHeal() {
         super("AutoRescue", category.player);
-        //this.registerSetting(new DescriptionSetting("Help you rescue teamate in zombie game."));
         this.registerSetting(maxHealth = new SliderSetting("Rescue when health above", 6, 0, 20, 1));
 		this.registerSetting(rescueRange = new SliderSetting("Rescue range", 2.0, 1.0, 3.0, 0.1));
+		this.registerSetting(dualRescueMode = new ButtonSetting("Dual mode", false));
     }
 	
 	public void onEnable() {
 		isRescuing = false;
+		latestState = 0;
+		rescuedTarget = false;
 		AutoClicker.rescuing = false;
+		prevFoundRescueTarget = false;
+		lastReviveTime = System.currentTimeMillis() - 1500;
     }
 
     public void onDisable() {
-		//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING));
 		isRescuing = false;
+		latestState = 0;
 		AutoClicker.rescuing = false;
-		//mc.thePlayer.sendChatMessage("Stop Snaking.");
     }
 	
 	private void setFoundRescueTarget(boolean val){ foundRescueTarget=val; }
@@ -77,27 +85,91 @@ public class AutoHeal extends Module {
 						setFoundRescueTarget(true);
                     }
                 });
-		if(mc.thePlayer.isInvisible()) setFoundRescueTarget(false);
-		if(foundRescueTarget){
-			AutoClicker.rescuing = true;
-			if(!isRescuing && mc.thePlayer.getHealth()>=maxHealth.getInput()){
-				//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING));
-				//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING));
-				if (Utils.nullCheck() && mc.inGameHasFocus) 
-					KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
-				isRescuing = true;
-				//mc.thePlayer.sendChatMessage("Start Snaking.");
+		if(!dualRescueMode.isToggled()){
+			if(mc.thePlayer.isInvisible()) setFoundRescueTarget(false);
+			if(foundRescueTarget){
+				AutoClicker.rescuing = true;
+				if(!isRescuing && mc.thePlayer.getHealth()>=maxHealth.getInput()){
+					if (Utils.nullCheck() && mc.inGameHasFocus) 
+						KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+					isRescuing = true;
+				}
+			}else{
+				AutoClicker.rescuing = false;
+				if(isRescuing){
+					isRescuing = false;
+					KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+					KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+					mc.thePlayer.inventory.currentItem = 4;
+				}
 			}
 		}else{
-			AutoClicker.rescuing = false;
-			if(isRescuing){
-				//mc.thePlayer.sendQueue.addToSendQueue(new C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING));
+			if(mc.thePlayer.isInvisible()){
+				latestState = 2;
+				//mc.thePlayer.sendChatMessage("Stop rescuing：invis");
+				AutoClicker.rescuing = false;
 				isRescuing = false;
+				rescuedTarget = false;
 				KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
 				KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
-				mc.thePlayer.inventory.currentItem = 4;
-				//mc.thePlayer.sendChatMessage("Stop Snaking.");
+			}else{
+				if(mc.thePlayer.getHealth() >= (mc.thePlayer.getMaxHealth()*0.65)){
+					latestState = 0;
+					//mc.thePlayer.sendChatMessage("Stop rescuing：safe");
+				}
+				if(latestState == 2){
+					latestState = 1;
+					lastReviveTime = System.currentTimeMillis();
+				}
+				if(latestState == 1){
+					if(System.currentTimeMillis()-lastReviveTime >= 1100){
+						if(!foundRescueTarget && prevFoundRescueTarget){
+							if(isRescuing){
+								//mc.thePlayer.sendChatMessage("Stop rescuing.");
+								AutoClicker.rescuing = false;
+								isRescuing = false;
+								rescuedTarget = true;
+								KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+								KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+								mc.thePlayer.inventory.currentItem = 4;
+							}
+						}else if(foundRescueTarget && !prevFoundRescueTarget){
+							KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+						}else{
+							if(!rescuedTarget){
+								if(!isRescuing /*&& mc.thePlayer.getHealth()>=maxHealth.getInput()*/){
+									AutoClicker.rescuing = true;
+									isRescuing = true;
+								}
+							}//else mc.thePlayer.sendChatMessage("Rescued target, waiting for death.");
+						}
+						prevFoundRescueTarget = foundRescueTarget;
+					}else{
+						//mc.thePlayer.sendChatMessage("Stop rescuing：firing");
+						AutoClicker.rescuing = false;
+						isRescuing = false;
+					}
+				}
+				if(latestState == 0){
+					if(foundRescueTarget){
+						AutoClicker.rescuing = true;
+						if(!isRescuing /*&& mc.thePlayer.getHealth()>=maxHealth.getInput()*/){
+							if (Utils.nullCheck() && mc.inGameHasFocus) 
+								KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
+							isRescuing = true;
+						}
+					}else{
+						AutoClicker.rescuing = false;
+						if(isRescuing){
+							isRescuing = false;
+							KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false);
+							KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+							mc.thePlayer.inventory.currentItem = 4;
+						}
+					}
+				}
 			}
+			
 		}
 		
 	}
