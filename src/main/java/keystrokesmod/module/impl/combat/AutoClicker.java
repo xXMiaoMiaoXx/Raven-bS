@@ -1,5 +1,6 @@
 package keystrokesmod.module.impl.combat;
 
+import akka.japi.Pair;
 import keystrokesmod.module.Module;
 import keystrokesmod.module.ModuleManager;
 import keystrokesmod.module.impl.other.RecordClick;
@@ -16,6 +17,9 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.BlockPos;
@@ -28,7 +32,9 @@ import org.lwjgl.input.Mouse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AutoClicker extends Module {
 	public static boolean rescuing = false;
@@ -41,7 +47,7 @@ public class AutoClicker extends Module {
 	private int action;
 	private Random rand = null;
 	private long lastClickTime, curTime;
-	private static int useShotgunIntention = 0;
+	private boolean foundNearTarget;
 
     public AutoClicker() {
         super("AutoClicker", Module.category.combat, 0);
@@ -52,6 +58,7 @@ public class AutoClicker extends Module {
 
     public void onEnable() {
 		action = 0;
+		foundNearTarget = false;
 		lastClickTime = System.currentTimeMillis()-50;
         this.rand = new Random();
     }
@@ -67,6 +74,8 @@ public class AutoClicker extends Module {
 		action++;
 		action %= ((int)weaponCount.getInput())*2;
 	}
+	
+	private void setFoundNearTarget(boolean val){ foundNearTarget=val; }
 
     @SubscribeEvent
     public void onRenderTick(@NotNull RenderTickEvent ev) {
@@ -77,7 +86,19 @@ public class AutoClicker extends Module {
 					lastClickTime = curTime;
 				}else return;
 				
-				if(mc.thePlayer.hurtTime != 0) useShotgunIntention = 5;
+				setFoundNearTarget(false);
+				mc.theWorld.loadedEntityList.stream()
+                .filter(Objects::nonNull)
+				.filter(entity -> entity instanceof EntityLivingBase)
+				.map(entity -> new Pair<>(entity, mc.thePlayer.getDistanceSqToEntity(entity)))
+				.sorted((p1, p2) -> p2.second().compareTo(p1.second()))
+				.forEach(pair -> {
+                    // need a more accurate distance check as this can ghost on hypixel
+					//mc.thePlayer.sendChatMessage(String.valueOf(pair.second()));
+                    if (!(pair.first() instanceof EntityPlayer) && !(pair.first() instanceof EntityArmorStand) && pair.second() <= 40.0) {
+						setFoundNearTarget(true);
+                    }
+                });
 				
 				if(rescuing){
 					if(blocking) return;
@@ -110,10 +131,10 @@ public class AutoClicker extends Module {
 							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 							if(smartUseShotgun.isToggled()){
-								if(useShotgunIntention <= 0){
+								if(!foundNearTarget){
 									incAction();
 									incAction();
-								}else useShotgunIntention--;
+								}
 							}
 						}
 					break;
