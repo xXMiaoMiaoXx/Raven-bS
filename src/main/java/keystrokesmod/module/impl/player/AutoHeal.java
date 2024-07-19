@@ -122,7 +122,11 @@ public class AutoHeal extends Module {
 					lastReviveTime = System.currentTimeMillis();
 				}
 				if(latestState == 1){
-					if(System.currentTimeMillis()-lastReviveTime >= 1100){
+					if(System.currentTimeMillis()-lastReviveTime >= 900) AutoClicker.isInvincible = false;
+					else AutoClicker.isInvincible = true;
+					
+					if(System.currentTimeMillis()-lastReviveTime >= 700){
+						AutoClicker.isInvincible = false;
 						if(!foundRescueTarget && prevFoundRescueTarget){
 							if(isRescuing){
 								//mc.thePlayer.sendChatMessage("Stop rescuing.");
@@ -134,13 +138,12 @@ public class AutoHeal extends Module {
 								mc.thePlayer.inventory.currentItem = 4;
 							}
 						}else if(foundRescueTarget && !prevFoundRescueTarget){
+							if(System.currentTimeMillis()-lastReviveTime >= 900) AutoClicker.rescuing = true;
 							KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true);
 						}else{
 							if(!rescuedTarget){
-								if(!isRescuing /*&& mc.thePlayer.getHealth()>=maxHealth.getInput()*/){
-									AutoClicker.rescuing = true;
-									isRescuing = true;
-								}
+								if(System.currentTimeMillis()-lastReviveTime >= 900) AutoClicker.rescuing = true;
+								if(!isRescuing) isRescuing = true;
 							}//else mc.thePlayer.sendChatMessage("Rescued target, waiting for death.");
 						}
 						prevFoundRescueTarget = foundRescueTarget;
