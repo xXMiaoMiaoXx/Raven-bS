@@ -39,6 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AutoClicker extends Module {
 	public static boolean rescuing = false;
 	public static boolean blocking = false;
+	public static boolean isInvincible = false;
+	private static boolean refillWeapon = false;
 	
 	private final SliderSetting shotInterval;
 	private final SliderSetting weaponCount;
@@ -117,6 +119,11 @@ public class AutoClicker extends Module {
 					}
 				}
 				
+				if(isInvincible && this.rand.nextInt(100) > 50)
+					refillWeapon = true;
+				else
+					refillWeapon = false;
+				
 				switch (action) {
 					case 0: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
@@ -128,7 +135,10 @@ public class AutoClicker extends Module {
 					case 1: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
 							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+							if(refillWeapon)
+								KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+							else
+								KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 							if(smartUseShotgun.isToggled()){
 								if(!foundNearTarget){
@@ -150,7 +160,10 @@ public class AutoClicker extends Module {
 					case 3: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
 							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+							if(refillWeapon)
+								KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+							else
+								KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 						}
 					break;
@@ -165,7 +178,10 @@ public class AutoClicker extends Module {
 					case 5: 
 						if(this.rand.nextInt(100) > (int)shotInterval.getInput()){
 							//KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), true);
-							KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+							if(refillWeapon)
+								KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
+							else
+								KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
 							incAction();
 						}
 					break;
